@@ -5,7 +5,7 @@ class loadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: CircularProgressIndicator(
         color: Color.fromRGBO(226, 48, 71, 1), // Your desired color
       ),

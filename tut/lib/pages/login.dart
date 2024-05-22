@@ -1,11 +1,7 @@
 // ignore_for_file: use_super_parameters, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:tut/components/bottom_navbar.dart';
 import 'package:tut/components/my_button.dart';
 import 'package:tut/components/my_textfield.dart';
 
@@ -13,7 +9,7 @@ class LoginPage extends StatefulWidget {
 
   final Function()? onTap;
 
-  LoginPage({super.key, required this.onTap}); 
+  const LoginPage({super.key, required this.onTap}); 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }

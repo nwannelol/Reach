@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tut/pages/home.dart';
 import 'package:tut/pages/log-reg.dart';
-import 'package:tut/pages/login.dart';
 
 class Auth extends StatelessWidget {
   const Auth({super.key});
@@ -20,7 +19,7 @@ class Auth extends StatelessWidget {
         }
           // Not signed in
           else{
-            return logReg();
+            return const logReg();
           }
         }
         )),

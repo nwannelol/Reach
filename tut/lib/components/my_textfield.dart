@@ -9,12 +9,12 @@ class MyTextField extends StatelessWidget {
   
 
   const MyTextField({
-    Key? key, // Specify the key parameter correctly
+    super.key, // Specify the key parameter correctly
     required this.controller,
     required this.hintText,
     required this.obscureText,
 
-  }) : super(key: key); // Call the superclass constructor with the key parameter
+  }); // Call the superclass constructor with the key parameter
 
   @override
   Widget build(BuildContext context) {

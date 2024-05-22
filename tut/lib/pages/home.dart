@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tut/components/bottom_navbar.dart';
+// Import your reportFloatingActionButton widget
+ // Assuming it's in a components folder
+import 'package:location/location.dart' as location;
+import 'package:tut/components/reportButton.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -18,14 +22,14 @@ class HomePage extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: signOut,
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
           ),
         ],
       ),
-      backgroundColor: Color(0xFF0F111A),
+      backgroundColor: const Color(0xFF0F111A),
       body: Center(
         child: Text(
-          'USER LOGGED IN: ' + user.email! + '!',
+          'USER LOGGED IN: ${user.email!}!',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Color.fromRGBO(226, 48, 71, 1),
@@ -33,8 +37,9 @@ class HomePage extends StatelessWidget {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButtonWidget(),
-      bottomNavigationBar: BottomNavigationBarWidget(),
+      // Replace FloatingActionButtonWidget() with reportFloatingActionButton
+      floatingActionButton: reportFloatingActionButton(context: context,),
+      bottomNavigationBar: const BottomNavigationBarWidget(),
     );
   }
 }
