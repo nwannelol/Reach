@@ -5,6 +5,7 @@ import 'package:tut/components/bottom_navbar.dart';
  // Assuming it's in a components folder
 import 'package:location/location.dart' as location;
 import 'package:tut/components/reportButton.dart';
+import 'package:tut/components/sideMenu.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -26,6 +27,7 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+      drawer: SideMenu(),
       backgroundColor: const Color(0xFF0F111A),
       body: Center(
         child: Text(
@@ -38,8 +40,8 @@ class HomePage extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       // Replace FloatingActionButtonWidget() with reportFloatingActionButton
-      floatingActionButton: reportFloatingActionButton(context: context,),
-      bottomNavigationBar: const BottomNavigationBarWidget(),
+      floatingActionButton: ReportFloatingActionButton(),
+      
     );
   }
 }

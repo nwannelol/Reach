@@ -2,6 +2,7 @@ import 'package:admin_app/config/size_config.dart';
 import 'package:admin_app/style/colors.dart';
 import 'package:admin_app/style/styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class RecentActivities extends StatelessWidget {
   const RecentActivities({
@@ -31,8 +32,32 @@ class RecentActivities extends StatelessWidget {
 
         Column(
           children: [
-            PrimaryText(text: 'Recent Activity', size: 18, fontWeight: FontWeight.w800,)
+            PrimaryText(text: 'Recent Activity', size: 18, fontWeight: FontWeight.w800,),
+            //PrimaryText()
+
           ],
+        ),
+        SizedBox(
+          height: SizeConfig.blockSizeVertical! * 2,
+        ),
+
+        ListTile(
+          contentPadding: EdgeInsets.only(left: 0, right: 20),
+          visualDensity: VisualDensity.standard,
+          leading: Container(
+            width: 50,
+            padding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+            decoration: BoxDecoration(
+              color: AdminAppColors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: SvgPicture.asset('assets/water', width: 20,),
+
+          ),
+          title: PrimaryText(text: 'water bill', fontWeight: FontWeight.w500,),
+          subtitle: Row(
+            
+          ),
         )
       ],
     );

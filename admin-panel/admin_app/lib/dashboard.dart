@@ -37,7 +37,7 @@ class Dashboard extends StatelessWidget {
               child: Column(
                 children: [
                   HeroButtons(),
-                  RecentActivities()
+                  // RecentActivities()
                 ],
               ),
             ),

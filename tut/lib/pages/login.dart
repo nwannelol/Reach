@@ -21,37 +21,61 @@ class _LoginPageState extends State<LoginPage> {
 
   // User Sign in method
   void userSignIn() async {
-    
-    //Loading circle
-    showDialog(
+  // Display loading circle
+  showDialog(
     context: context,
-    builder: (context){ 
-      return Center(
+    builder: (context) => Center(
       child: CircularProgressIndicator(
         color: Color.fromRGBO(226, 48, 71, 1), // Custom color
       ),
-    );
-    }
+    ),
   );
-    
-    //TRY TO SIGN IN
-    try {
-  await FirebaseAuth.instance.signInWithEmailAndPassword(
-    email: emailController.text, 
-    password: passwordController.text
+
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: emailController.text,
+      password: passwordController.text,
     );
+
+    // Login successful, pop loading circle and navigate (if needed)
+    Navigator.pop(context);
     
-    // POP LOADING CIRCLE
-      Navigator.pop(context);
-} 
-    on FirebaseAuthException catch (e) {
+    // Replace with your navigation logics
+  } on FirebaseAuthException catch (e) {
+    // Pop loading circle
+    Navigator.pop(context);
 
-      // POP LOADING CIRCLE
-      Navigator.pop(context);
-
-      showErrorMessage(e.code);
-    }
+    // Display error message based on error code
+    //showErrorMessage(e.code);
+    final msg = e.code;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg.toUpperCase())));
   }
+}
+
+// Improved error message function (optional to use) Implement by uncommentting showErrorMessage(e.code)
+void showErrorMessage(String errorCode) {
+  String message = "";
+  
+  switch (errorCode) {
+    case "user-not-found":
+      message = "The email address you entered is not associated with an account.";
+      break;
+    case "wrong-password":
+      message = "The password you entered is incorrect.";
+      break;
+    case "too-many-requests":
+      message = "Too many sign-in attempts. Please try again later.";
+      break;
+    case "weak-password":
+      message = "The password you entered is too weak. Please choose a stronger password.";
+      break;
+    default:
+      message = "An error occurred during sign in. Please try again.";
+  }
+
+  // Display the message using a SnackBar, Dialog, or other method
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
 
 
   @override
@@ -101,6 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: passwordController,
                 hintText: 'Password',
                 obscureText: true,
+                suffixIcon: Icons.hide_image_rounded,
               ), 
               
               SizedBox(height: 10,),
@@ -154,30 +179,30 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
   
-  void showErrorMessage(String message) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        backgroundColor: Color.fromRGBO(226, 48, 71, 1),
-        contentPadding: const EdgeInsets.all(25.0),
-        title: Center(
-          child: Text(
-            message,
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), // Dismiss the dialog
-            child: Text('Dismiss message', style: TextStyle(color: Colors.white),),
-          ),
-        ],
-      );
-    },
-  );
-}
+//   void showErrorMessage(String message) {
+//   showDialog(
+//     context: context,
+//     builder: (context) {
+//       return AlertDialog(
+//         backgroundColor: Color.fromRGBO(226, 48, 71, 1),
+//         contentPadding: const EdgeInsets.all(25.0),
+//         title: Center(
+//           child: Text(
+//             message,
+//             style: const TextStyle(color: Colors.white),
+//           ),
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.pop(context), // Dismiss the dialog
+//             child: Text('Dismiss message', style: TextStyle(color: Colors.white),),
+//           ),
+//         ],
+//       );
+//     },
+//   );
+// }
 
-}
+//}
 
-  
+} 
