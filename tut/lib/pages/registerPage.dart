@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:tut/components/my_button.dart';
 import 'package:tut/components/my_textfield.dart';
 import 'package:tut/components/reportButton.dart';
@@ -34,53 +35,61 @@ class _registerPageState extends State<registerPage> {
 
   // User Sign up method
   void userSignUp() async {
-    //Loading circle
-    showDialog(
+  // Loading circle
+  showDialog(
     context: context,
-    builder: (context){ 
+    builder: (context) {
       return Center(
-      child: CircularProgressIndicator(
-        color: Color.fromRGBO(226, 48, 71, 1), // Custom color
-      ),
-    );
-    }
+        child: CircularProgressIndicator(
+          color: Color.fromRGBO(226, 48, 71, 1), // Custom color
+        ),
+      );
+    },
+    barrierDismissible: false, // Prevent dismissing the dialog
   );
-    //TRY TO CREATE IN
-    try {
-      // Confirm passwords match
-      if (passwordConfirmed()){
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text, 
-        password: passwordController.text
-        );
+
+  // TRY TO CREATE IN
+  try {
+    // Confirm passwords match
+    if (passwordConfirmed()) {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
       addUserDetails(
         firstNamecontroller.text.trim(),
         lastNamecontroller.text.trim(),
         emailController.text.trim(),
-        int.parse(phoneNumberController.text.trim())
+        int.parse(phoneNumberController.text.trim()),
       );
 
-      }
-      else{
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Passwords do not match. Please try again.'))
-        );
-      }
-    // POP LOADING CIRCLE
-      Navigator.pop(context);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-} 
-    on FirebaseAuthException catch (e) {
       // POP LOADING CIRCLE
       Navigator.pop(context);
-      showErrorMessage(e.code);
-    }
 
+      
+    } else {
+      Navigator.pop(context); // Ensure to pop the loading dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Passwords do not match. Please try again.'),
+        ),
+      );
+    }
+  } on FirebaseAuthException catch (e) {
+    String errorCode = e.code;
+    // POP LOADING CIRCLE
+    Navigator.pop(context);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorCode), // Wrap errorCode in Text widget
+      ),
+    );
   }
+}
+
 
   Future addUserDetails(String firstNamecontroller, String lastNamecontroller, String emailController, int phoneNumberController) async {
     await FirebaseFirestore.instance.collection('users').add({
@@ -172,7 +181,7 @@ class _registerPageState extends State<registerPage> {
                       controller: firstNamecontroller,
                       expands: false,
                       style: TextStyle(
-                        color: Color.fromRGBO(226, 48, 71, 1),
+                        color: Color.fromRGBO(255, 255, 255, 1),
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -245,12 +254,29 @@ class _registerPageState extends State<registerPage> {
 
               SizedBox(height: 10,),
 
-              MyTextField(
-                controller: phoneNumberController,
-                hintText: 'Phone number',
-                obscureText: false,
-                textFieldIcon: Icons.phone_iphone_rounded,
-                
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15.0),
+                child: IntlPhoneField(
+                  controller: phoneNumberController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide(color: Color.fromRGBO(226, 48, 71, 1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                    borderSide: BorderSide(color: Color.fromRGBO(226, 48, 71, 1)),
+                    ),
+                    fillColor: Color.fromRGBO(255, 112, 129, 205),
+                    filled: true,
+                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    prefixIcon: Icon(Icons.phone_iphone_rounded, color: Color.fromRGBO(226, 48, 71, 1)),
+                  ),
+                  initialCountryCode: 'US',
+                  onChanged: (phone) {
+                    print(phone.completeNumber); // You can use phone.completeNumber for the full number
+                  },
+                ),
               ),
 
               SizedBox(height: 10,),
@@ -259,7 +285,7 @@ class _registerPageState extends State<registerPage> {
               MyTextField(
                 controller: passwordController,
                 hintText: 'Password',
-                obscureText: true,
+                obscureText: false,
                 textFieldIcon: Icons.account_balance_wallet,
               ), 
               

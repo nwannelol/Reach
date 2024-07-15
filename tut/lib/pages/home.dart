@@ -1,47 +1,41 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:tut/components/bottom_navbar.dart';
-// Import your reportFloatingActionButton widget
- // Assuming it's in a components folder
-import 'package:location/location.dart' as location;
-import 'package:tut/components/reportButton.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:starsview/starsview.dart';
 import 'package:tut/components/sideMenu.dart';
+import 'package:tut/components/reportButton.dart'; // Adjust the import according to your file structure
 
 class HomePage extends StatelessWidget {
-  HomePage({super.key});
-
-  final user = FirebaseAuth.instance.currentUser!;
-
-  void signOut() {
-    FirebaseAuth.instance.signOut();
-  }
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: signOut,
-            icon: const Icon(Icons.logout),
+        title: const Text('Emergency Report'),
+      ),
+      body: Stack(
+        children: [
+          StarsView(fps: 60), // Add your animated background here
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'TAP TO REPORT EMERGENCY',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromRGBO(226, 48, 71, 1),
+                    fontSize: 20.0,
+                  ),
+                ),
+                const SizedBox(height: 40.0),
+                const ReportFloatingActionButton(),
+              ],
+            ),
           ),
         ],
       ),
-      drawer: SideMenu(),
-      backgroundColor: const Color(0xFF0F111A),
-      body: Center(
-        child: Text(
-          'USER LOGGED IN: ${user.email!}!',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color.fromRGBO(226, 48, 71, 1),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      // Replace FloatingActionButtonWidget() with reportFloatingActionButton
-      floatingActionButton: ReportFloatingActionButton(),
-      
     );
   }
 }

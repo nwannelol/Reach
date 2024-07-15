@@ -24,7 +24,6 @@ class MyTextField extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 15.0), // Adjust padding to reduce spacing
       child: TextFormField(
         controller: controller,
-
         style: TextStyle(
           color: Color.fromRGBO(255, 254, 254, 1),
           fontSize: 16,

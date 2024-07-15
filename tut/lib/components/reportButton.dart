@@ -1,14 +1,74 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
+import 'dart:io';
+import 'package:avatar_glow/avatar_glow.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tut/components/imagePicker.dart';
-import 'package:tut/components/my_button.dart';
+import 'package:path/path.dart' as path;
+import 'package:google_fonts/google_fonts.dart';
+import 'package:starsview/starsview.dart';
+import 'data_firestore.dart';
+ 
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
+      home: const HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Emergency Report'),
+      ),
+      body: Stack(
+        children: [
+          StarsView(fps: 60), // Add your animated background here
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'TAP TO REPORT EMERGENCY',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromRGBO(226, 48, 71, 1),
+                    fontSize: 20.0,
+                  ),
+                ),
+                const SizedBox(height: 40.0),
+                const ReportFloatingActionButton(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class ReportFloatingActionButton extends StatefulWidget {
   const ReportFloatingActionButton({super.key});
@@ -19,19 +79,47 @@ class ReportFloatingActionButton extends StatefulWidget {
 
 class _ReportFloatingActionButtonState extends State<ReportFloatingActionButton> {
   String? userEmergency;
-  String? imageUrl = '';
+  final FirestoreService _firestoreService = FirestoreService();
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => showModalBottomSheet(
-        context: context,
-        builder: (BuildContext context) => _buildBottomSheet(context),
+    return AvatarGlow(
+      glowColor: const Color.fromRGBO(226, 48, 71, 1),
+      animate: true,
+      duration: const Duration(milliseconds: 2000),
+      repeat: true,
+      child: Material(
+        elevation: 8.0,
+        shape: const CircleBorder(),
+        child: GestureDetector(
+          onTap: () => showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) => _buildBottomSheet(context),
+          ),
+          child: Container(
+            width: 150.0,  // Increased width
+            height: 150.0, // Increased height
+            decoration: BoxDecoration(
+              color: const Color.fromRGBO(226, 48, 71, 1),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  spreadRadius: 4,
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.add,
+              size: 80.0,  // Increased icon size
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
-      backgroundColor: const Color.fromRGBO(226, 48, 71, 1),
-      mini: true,
-      shape: const CircleBorder(),
-      child: const Icon(Icons.add),
     );
   }
 
@@ -44,28 +132,28 @@ class _ReportFloatingActionButtonState extends State<ReportFloatingActionButton>
             title: ListTile(
               leading: const Icon(Icons.lock),
               title: const Text('Police Harassment'),
-              onTap: () => handleEmergency(context, 'Harassment'),
+              onTap: () => _handleEmergency('Harassment'),
             ),
           ),
           GestureDetector(
             child: ListTile(
               leading: const Icon(Icons.local_police),
               title: const Text('Security'),
-              onTap: () => _pickImage(context),
+              onTap: () => _pickImage(),
             ),
-            onTap: () => _pickImage(context),
+            onTap: () => _pickImage(),
           ),
           ListTile(
             leading: const Icon(Icons.notification_important),
             title: const Text('Fire'),
-            onTap: () => handleEmergency(context, 'Fire'),
+            onTap: () => _handleEmergency('Fire'),
           ),
         ],
       ),
     );
   }
 
-  Future<void> handleEmergency(BuildContext context, String emergencyType) async {
+  Future<void> _handleEmergency(String emergencyType) async {
     setState(() {
       userEmergency = emergencyType;
     });
@@ -78,22 +166,16 @@ class _ReportFloatingActionButtonState extends State<ReportFloatingActionButton>
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         // Permissions are denied, handle appropriately.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permissions are required.')),
-        );
+        _showSnackBar('Location permissions are required.');
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location permissions are permanently denied.')),
-      );
+      _showPermissionsDialog();
       return;
     }
-
-    final timestamp = Timestamp.now();
 
     Position? position;
     try {
@@ -102,33 +184,21 @@ class _ReportFloatingActionButtonState extends State<ReportFloatingActionButton>
         throw TimeoutException('Location timeout');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to get location: $e')),
-      );
+      _showSnackBar('Failed to get location: $e');
       return;
     }
 
     // Show the location in a SnackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Current location: Lat: ${position.latitude}, Lon: ${position.longitude}')),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Successfully reported emergency. Please await official response.')),
-    );
+    _showSnackBar('Current location: Lat: ${position.latitude}, Lon: ${position.longitude}');
+    _showSnackBar('Successfully reported emergency. Please await official response.');
 
-    final user = FirebaseAuth.instance.currentUser!;
-    final userId = user.uid;
-
-    final locationDoc = {
-      'emergencyType': userEmergency,
-      'useruid': userId,
-      'email': user.email,
-      'location': GeoPoint(position.latitude, position.longitude),
-      'timestamp': timestamp,
-      'accuracy': position.accuracy,
-    };
-
-    await FirebaseFirestore.instance.collection('user-locations').add(locationDoc);
+    try {
+      await _firestoreService.reportEmergency(emergencyType, position);
+      print('Emergency data successfully sent to Firestore.');
+    } catch (e) {
+      print('Failed to send emergency data to Firestore: $e');
+      _showSnackBar('Failed to send emergency data: $e');
+    }
   }
 
   Future<Position?> _getLocation() async {
@@ -145,42 +215,86 @@ class _ReportFloatingActionButtonState extends State<ReportFloatingActionButton>
     }
   }
 
-  Future<void> _pickImage(BuildContext context) async {
-    // Request camera and storage permissions
+  void _showPermissionsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Location Permissions Required'),
+          content: const Text(
+              'Location permissions are permanently denied. Please enable them in the app settings.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                openAppSettings();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage() async {
     final cameraStatus = await Permission.camera.request();
     final storageStatus = await Permission.storage.request();
 
     if (cameraStatus.isGranted && storageStatus.isGranted) {
-      // Permission granted
-      final imagePicker = ImagePicker();
-      final pickedFile = await imagePicker.pickImage(
-        source: ImageSource.gallery, // Change to ImageSource.camera for camera
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.camera,
       );
 
       if (pickedFile != null) {
-        // Handle picked image or document (replace with your upload logic)
-        print('Picked file path: ${pickedFile.path}');
-        // ... your upload logic
+        try {
+          String downloadUrl = await _uploadImageToFirebase(pickedFile);
+          print('Image uploaded: $downloadUrl');
+          _showSnackBar('Image uploaded successfully.');
+        } catch (e) {
+          print('Failed to upload image: $e');
+          _showSnackBar('Failed to upload image: $e');
+        }
       } else {
-        print('No image or document selected.');
+        print('No image selected.');
       }
     } else {
-      // Permission denied
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Camera and storage permissions are required.'),
-        ),
-      );
+      _showSnackBar('Camera and storage permissions are required.');
     }
+  }
+
+  Future<String> _uploadImageToFirebase(XFile pickedFile) async {
+    String fileName = path.basename(pickedFile.path);
+    Reference firebaseStorageRef = FirebaseStorage.instance
+        .ref()
+        .child('user-emergencies/$fileName');
+    UploadTask uploadTask = firebaseStorageRef.putFile(File(pickedFile.path));
+    TaskSnapshot taskSnapshot = await uploadTask;
+    return await taskSnapshot.ref.getDownloadURL();
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }
 
-void main() {
-  runApp(const MaterialApp(
-    home: Scaffold(
-      floatingActionButton: ReportFloatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      body: Center(child: Text('Content goes here')),
-    ),
-  ));
+class FirestoreService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> reportEmergency(String emergencyType, Position position) async {
+    await _firestore.collection('emergencies').add({
+      'type': emergencyType,
+      'latitude': position.latitude,
+      'longitude': position.longitude,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
 }
